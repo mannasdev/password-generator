@@ -29,10 +29,10 @@ export function PasswordGeneratorComponent() {
     if (includeSymbols) charset += '!@#$%^&*()_+{}[]|:;<>,.?/~'
 
     let newPassword = ''
+    const separators = "!@#$%^&*()_+{}[]|:;<>,.?/~"
     if (useReadablePattern) {
       const defaultWords = ["apple", "orange", "banana", "grape", "peach", "plum", "berry", "melon", "kiwi", "mango", "cherry", "pear", "lemon", "lime", "apricot", "fig", "date", "coconut", "papaya", "pineapple"]
       const words = customPattern ? customPattern.split(',') : defaultWords
-      const separators = "!@#$%^&*()_+{}[]|:;<>,.?/~"
       for (let i = 0; i < length; i++) {
         if (i % 2 === 0) {
           let word = words[Math.floor(Math.random() * words.length)]
@@ -44,9 +44,15 @@ export function PasswordGeneratorComponent() {
       }
       newPassword = newPassword.slice(0, length)
     } else {
-      for (let i = 0; i < length; i++) {
+      const wordCount = Math.floor(length * 0.75)
+      const specialCharCount = length - wordCount
+      for (let i = 0; i < wordCount; i++) {
         newPassword += charset.charAt(Math.floor(Math.random() * charset.length))
       }
+      for (let i = 0; i < specialCharCount; i++) {
+        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
+      }
+      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
     }
     setPassword(newPassword.replace(/\s+/g, ''))
   }
