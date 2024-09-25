@@ -16,7 +16,6 @@ export function PasswordGeneratorComponent() {
   const [length, setLength] = useState(12)
   const [includeUppercase, setIncludeUppercase] = useState(true)
   const [includeLowercase, setIncludeLowercase] = useState(true)
-  const [includeNumbers, setIncludeNumbers] = useState(true)
   const [includeSymbols, setIncludeSymbols] = useState(true)
   const [useReadablePattern, setUseReadablePattern] = useState(false)
   const [customPattern, setCustomPattern] = useState('')
@@ -34,102 +33,12 @@ export function PasswordGeneratorComponent() {
     }
   }, [])
 
-  const generatePassword = () => {
-    let charset = ''
-    if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz'
-    if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    const numbers = '0123456789'
-    if (includeSymbols) charset += '!@#$%^&*'
-
-    let newPassword = ''
-    const separators = "!@#$%^&*"
-
-    if (makeHilarious) {
-      const funnyAsciiArt = [
-        '(╯°□°）╯︵ ┻━┻',
-        '¯\\_(ツ)_/¯',
-        '(ノಠ益ಠ)ノ彡┻━┻',
-        '(づ￣ ³￣)づ',
-        'ಠ_ಠ',
-        '(⌐■_■)',
-        '(╯°□°)╯︵ ʞooqǝɔɐɟ',
-        '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
-        '(╯°□°)╯︵ ┻━┻ ︵ ╯(°□° ╯)',
-        '┬┴┬┴┤(･_├┬┴┬┴'
-      ]
-      newPassword = funnyAsciiArt[Math.floor(Math.random() * funnyAsciiArt.length)]
-    } else if (makeKlingon) {
-      const klingonSyllables = ['tlh', 'gh', 'ng', 'ch', 'q', 'H', 'D', 'b', 't', 'l', 'S', 'w', 'j', 'p', 'm', 'v', 'y', 'r', 'Q', 'n']
-      const klingonVowels = ['a', 'e', 'I', 'o', 'u']
-      const klingonLength = Math.ceil(length * 0.8)
-      const numLength = 1
-      const specialLength = length - klingonLength - numLength
-
-      for (let i = 0; i < klingonLength; i++) {
-        newPassword += klingonSyllables[Math.floor(Math.random() * klingonSyllables.length)]
-        if (Math.random() > 0.5) {
-          newPassword += klingonVowels[Math.floor(Math.random() * klingonVowels.length)]
-        }
-      }
-      newPassword = newPassword.slice(0, klingonLength)
-
-      // Add a number
-      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
-
-      // Add special characters
-      for (let i = 0; i < specialLength; i++) {
-        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
-      }
-
-      // Shuffle the password
-      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
-    } else if (useReadablePattern) {
-      const defaultWords = ["apple", "orange", "banana", "grape", "peach", "plum", "berry", "melon", "kiwi", "mango", "cherry", "pear", "lemon", "lime", "apricot", "fig", "date", "coconut", "papaya", "pineapple"]
-      const words = customPattern ? customPattern.split(',') : defaultWords
-      const textLength = Math.ceil(length * 0.6)
-      const numLength = 1
-      const specialLength = length - textLength - numLength
-
-      // Generate text part
-      for (let i = 0; i < textLength; i++) {
-        let word = words[Math.floor(Math.random() * words.length)]
-        word = word.split('').map(char => Math.random() > 0.5 ? char.toUpperCase() : char).join('')
-        newPassword += word.charAt(i % word.length)
-      }
-
-      // Add a number
-      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
-
-      // Add special characters
-      for (let i = 0; i < specialLength; i++) {
-        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
-      }
-
-      // Shuffle the password
-      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
-    } else {
-      const textLength = Math.ceil(length * 0.6)
-      const numLength = 1
-      const specialLength = length - textLength - numLength
-
-      // Generate text part
-      for (let i = 0; i < textLength; i++) {
-        newPassword += charset.charAt(Math.floor(Math.random() * charset.length))
-      }
-
-      // Add a number
-      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
-
-      // Add special characters
-      for (let i = 0; i < specialLength; i++) {
-        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
-      }
-
-      // Shuffle the password
-      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
+  function generatePassword(length: number, charset: string): string {
+    let password = '';
+    for (let i = 0, n = charset.length; i < length; ++i) {
+      password += charset.charAt(Math.floor(Math.random() * n));
     }
-    setPassword(newPassword.replace(/\s+/g, ''))
-    setShowSaveDialog(true)
+    return password;
   }
 
   const copyToClipboard = () => {
@@ -141,7 +50,7 @@ export function PasswordGeneratorComponent() {
     })
   }
 
-  const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => (checked: any) => {
+  const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => (checked: boolean) => {
     if (typeof checked === 'boolean') {
       setter(checked)
     }
@@ -159,6 +68,20 @@ export function PasswordGeneratorComponent() {
         description: "Password saved to local storage",
       })
     }
+  }
+
+  const getCharset = () => {
+    let charset = '0123456789'
+    if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz'
+    if (includeSymbols) charset += '!@#$%^&*()_+{}[]|:;<>,.?/~'
+    return charset
+  }
+
+  const handleGeneratePassword = () => {
+    const charset = getCharset()
+    const newPassword = generatePassword(length, charset)
+    setPassword(newPassword)
   }
 
   return (
@@ -180,7 +103,7 @@ export function PasswordGeneratorComponent() {
             <Label>Password Length: {length}</Label>
             <Slider
               value={[length]}
-              onValueChange={(value: any) => setLength(value[0])}
+              onValueChange={(value: number[]) => setLength(value[0])}
               min={8}
               max={32}
               step={1}
@@ -227,7 +150,7 @@ export function PasswordGeneratorComponent() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button className="w-full" onClick={generatePassword}>Generate Password</Button>
+          <Button className="w-full" onClick={handleGeneratePassword}>Generate Password</Button>
           <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
             <DialogContent className="bg-white text-black">
               <DialogHeader>
