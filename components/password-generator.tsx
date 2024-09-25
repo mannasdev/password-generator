@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/hooks/use-toast"
-import type { CheckedState } from '@radix-ui/react-checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+// import type { CheckedState } from '@radix-ui/react-checkbox'
 
 export function PasswordGeneratorComponent() {
   const [password, setPassword] = useState('')
@@ -19,42 +20,116 @@ export function PasswordGeneratorComponent() {
   const [includeSymbols, setIncludeSymbols] = useState(true)
   const [useReadablePattern, setUseReadablePattern] = useState(false)
   const [customPattern, setCustomPattern] = useState('')
+  const [makeHilarious, setMakeHilarious] = useState(false)
+  const [makeKlingon, setMakeKlingon] = useState(false)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [saveKey, setSaveKey] = useState('')
+  const [savedPasswords, setSavedPasswords] = useState<{[key: string]: string}>({})
   const { toast } = useToast()
+
+  useEffect(() => {
+    const storedPasswords = localStorage.getItem('savedPasswords')
+    if (storedPasswords) {
+      setSavedPasswords(JSON.parse(storedPasswords))
+    }
+  }, [])
 
   const generatePassword = () => {
     let charset = ''
     if (includeLowercase) charset += 'abcdefghijklmnopqrstuvwxyz'
     if (includeUppercase) charset += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    if (includeNumbers) charset += '0123456789'
-    if (includeSymbols) charset += '!@#$%^&*()_+{}[]|:;<>,.?/~'
+    const numbers = '0123456789'
+    if (includeSymbols) charset += '!@#$%^&*'
 
     let newPassword = ''
-    const separators = "!@#$%^&*()_+{}[]|:;<>,.?/~"
-    if (useReadablePattern) {
-      const defaultWords = ["apple", "orange", "banana", "grape", "peach", "plum", "berry", "melon", "kiwi", "mango", "cherry", "pear", "lemon", "lime", "apricot", "fig", "date", "coconut", "papaya", "pineapple"]
-      const words = customPattern ? customPattern.split(',') : defaultWords
-      for (let i = 0; i < length; i++) {
-        if (i % 2 === 0) {
-          let word = words[Math.floor(Math.random() * words.length)]
-          word = word.split('').map(char => Math.random() > 0.5 ? char.toUpperCase() : char).join('')
-          newPassword += word
-        } else {
-          newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
+    const separators = "!@#$%^&*"
+
+    if (makeHilarious) {
+      const funnyAsciiArt = [
+        '(╯°□°）╯︵ ┻━┻',
+        '¯\\_(ツ)_/¯',
+        '(ノಠ益ಠ)ノ彡┻━┻',
+        '(づ￣ ³￣)づ',
+        'ಠ_ಠ',
+        '(⌐■_■)',
+        '(╯°□°)╯︵ ʞooqǝɔɐɟ',
+        '(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+        '(╯°□°)╯︵ ┻━┻ ︵ ╯(°□° ╯)',
+        '┬┴┬┴┤(･_├┬┴┬┴'
+      ]
+      newPassword = funnyAsciiArt[Math.floor(Math.random() * funnyAsciiArt.length)]
+    } else if (makeKlingon) {
+      const klingonSyllables = ['tlh', 'gh', 'ng', 'ch', 'q', 'H', 'D', 'b', 't', 'l', 'S', 'w', 'j', 'p', 'm', 'v', 'y', 'r', 'Q', 'n']
+      const klingonVowels = ['a', 'e', 'I', 'o', 'u']
+      const klingonLength = Math.ceil(length * 0.8)
+      const numLength = 1
+      const specialLength = length - klingonLength - numLength
+
+      for (let i = 0; i < klingonLength; i++) {
+        newPassword += klingonSyllables[Math.floor(Math.random() * klingonSyllables.length)]
+        if (Math.random() > 0.5) {
+          newPassword += klingonVowels[Math.floor(Math.random() * klingonVowels.length)]
         }
       }
-      newPassword = newPassword.slice(0, length)
-    } else {
-      const wordCount = Math.floor(length * 0.75)
-      const specialCharCount = length - wordCount
-      for (let i = 0; i < wordCount; i++) {
-        newPassword += charset.charAt(Math.floor(Math.random() * charset.length))
-      }
-      for (let i = 0; i < specialCharCount; i++) {
+      newPassword = newPassword.slice(0, klingonLength)
+
+      // Add a number
+      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
+
+      // Add special characters
+      for (let i = 0; i < specialLength; i++) {
         newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
       }
+
+      // Shuffle the password
+      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
+    } else if (useReadablePattern) {
+      const defaultWords = ["apple", "orange", "banana", "grape", "peach", "plum", "berry", "melon", "kiwi", "mango", "cherry", "pear", "lemon", "lime", "apricot", "fig", "date", "coconut", "papaya", "pineapple"]
+      const words = customPattern ? customPattern.split(',') : defaultWords
+      const textLength = Math.ceil(length * 0.6)
+      const numLength = 1
+      const specialLength = length - textLength - numLength
+
+      // Generate text part
+      for (let i = 0; i < textLength; i++) {
+        let word = words[Math.floor(Math.random() * words.length)]
+        word = word.split('').map(char => Math.random() > 0.5 ? char.toUpperCase() : char).join('')
+        newPassword += word.charAt(i % word.length)
+      }
+
+      // Add a number
+      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
+
+      // Add special characters
+      for (let i = 0; i < specialLength; i++) {
+        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
+      }
+
+      // Shuffle the password
+      newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
+    } else {
+      const textLength = Math.ceil(length * 0.6)
+      const numLength = 1
+      const specialLength = length - textLength - numLength
+
+      // Generate text part
+      for (let i = 0; i < textLength; i++) {
+        newPassword += charset.charAt(Math.floor(Math.random() * charset.length))
+      }
+
+      // Add a number
+      newPassword += numbers.charAt(Math.floor(Math.random() * numbers.length))
+
+      // Add special characters
+      for (let i = 0; i < specialLength; i++) {
+        newPassword += separators.charAt(Math.floor(Math.random() * separators.length))
+      }
+
+      // Shuffle the password
       newPassword = newPassword.split('').sort(() => 0.5 - Math.random()).join('')
     }
     setPassword(newPassword.replace(/\s+/g, ''))
+    setShowSaveDialog(true)
   }
 
   const copyToClipboard = () => {
@@ -66,9 +141,23 @@ export function PasswordGeneratorComponent() {
     })
   }
 
-  const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => (checked: CheckedState) => {
+  const handleCheckboxChange = (setter: React.Dispatch<React.SetStateAction<boolean>>) => (checked: any) => {
     if (typeof checked === 'boolean') {
       setter(checked)
+    }
+  }
+
+  const savePassword = () => {
+    if (saveKey) {
+      const updatedPasswords = { ...savedPasswords, [saveKey]: password }
+      setSavedPasswords(updatedPasswords)
+      localStorage.setItem('savedPasswords', JSON.stringify(updatedPasswords))
+      setShowSaveDialog(false)
+      setSaveKey('')
+      toast({
+        title: "Saved!",
+        description: "Password saved to local storage",
+      })
     }
   }
 
@@ -91,7 +180,7 @@ export function PasswordGeneratorComponent() {
             <Label>Password Length: {length}</Label>
             <Slider
               value={[length]}
-              onValueChange={(value) => setLength(value[0])}
+              onValueChange={(value: any) => setLength(value[0])}
               min={8}
               max={32}
               step={1}
@@ -109,8 +198,8 @@ export function PasswordGeneratorComponent() {
                 <Label htmlFor="lowercase">Lowercase</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="numbers" checked={includeNumbers} onCheckedChange={handleCheckboxChange(setIncludeNumbers)} />
-                <Label htmlFor="numbers">Numbers</Label>
+                <Checkbox id="numbers" checked={true} disabled />
+                <Label htmlFor="numbers">Numbers (Always included)</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox id="symbols" checked={includeSymbols} onCheckedChange={handleCheckboxChange(setIncludeSymbols)} />
@@ -120,7 +209,15 @@ export function PasswordGeneratorComponent() {
                 <Checkbox id="readablePattern" checked={useReadablePattern} onCheckedChange={handleCheckboxChange(setUseReadablePattern)} />
                 <Label htmlFor="readablePattern">Use Readable Pattern</Label>
               </div>
-              {useReadablePattern && (
+              <div className="flex items-center space-x-2">
+                <Checkbox id="makeHilarious" checked={makeHilarious} onCheckedChange={handleCheckboxChange(setMakeHilarious)} />
+                <Label htmlFor="makeHilarious">Make it Hilarious</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox id="makeKlingon" checked={makeKlingon} onCheckedChange={handleCheckboxChange(setMakeKlingon)} />
+                <Label htmlFor="makeKlingon">Make it Pronounceable in Klingon</Label>
+              </div>
+              {useReadablePattern && !makeHilarious && !makeKlingon && (
                 <div className="space-y-2">
                   <Label htmlFor="customPattern">Custom Pattern (comma separated words)</Label>
                   <Input id="customPattern" value={customPattern} onChange={(e) => setCustomPattern(e.target.value)} />
@@ -129,8 +226,51 @@ export function PasswordGeneratorComponent() {
             </div>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col space-y-2">
           <Button className="w-full" onClick={generatePassword}>Generate Password</Button>
+          <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
+            <DialogContent className="bg-white text-black">
+              <DialogHeader>
+                <DialogTitle>Save Password</DialogTitle>
+                <DialogDescription>
+                  Do you want to save this password in local storage? The password will not reach the server and can only be seen by you.
+                </DialogDescription>
+              </DialogHeader>
+              <Input
+                placeholder="Enter a key to save the password"
+                value={saveKey}
+                onChange={(e) => setSaveKey(e.target.value)}
+              />
+              <DialogFooter>
+                <Button onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                <Button onClick={savePassword}>Save</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline">View Saved Passwords</Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white text-black">
+              <DialogHeader>
+                <DialogTitle>Saved Passwords</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                {Object.entries(savedPasswords).map(([key, value]) => (
+                  <div key={key} className="flex justify-between items-center">
+                    <span>{key}: {value}</span>
+                    <Button onClick={() => {
+                      navigator.clipboard.writeText(value)
+                      toast({
+                        title: "Copied!",
+                        description: "Password copied to clipboard",
+                      })
+                    }}>Copy</Button>
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
         </CardFooter>
       </Card>
     </div>
