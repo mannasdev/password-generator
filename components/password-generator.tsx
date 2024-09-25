@@ -151,6 +151,7 @@ export function PasswordGeneratorComponent() {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button className="w-full" onClick={handleGeneratePassword}>Generate Password</Button>
+          <Button className="w-full" onClick={() => setShowSaveDialog(true)}>Save Password</Button>
           <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
             <DialogContent className="bg-white text-black">
               <DialogHeader>
